@@ -59,18 +59,29 @@ npm run start
 - In app, set **Backend URL** to your ngrok URL.
 - Tap **Refresh Models** to load all local Ollama models.
 
-## 5) Build APK (Cloud, Recommended)
+## 5) Build APK (No Account Required)
 
-Local Android SDK is not required with EAS cloud builds.
+This repository includes a GitHub Actions workflow that builds an APK on GitHub servers.
 
-```powershell
-cd "c:\School\BBB\Lernatelier\awesome bot\mobile"
-npm install -g eas-cli
-eas login
-eas build -p android --profile preview
-```
+How to use it:
 
-When the build finishes, Expo gives you an APK download URL.
+1. Push your latest changes to `main` (already done in this repo).
+2. Open GitHub repo -> **Actions** -> **Build Android APK**.
+3. Run workflow (or wait for auto-run on push).
+4. Open the workflow run and download artifact: **awesome-bot-apk**.
+
+Direct Actions page:
+
+- `https://github.com/Aboss3b13/awesome-bot/actions`
+
+The APK file produced is:
+
+- `app-debug.apk`
+
+Notes:
+
+- This does not require Expo account login.
+- For release-signed Play Store builds later, we can add keystore signing in CI.
 
 ## GitHub Push
 
