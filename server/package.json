@@ -1,0 +1,22 @@
+{
+  "name": "awesome-bot-server",
+  "version": "1.0.0",
+  "description": "Proxy API between mobile app and local Ollama",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": [
+    "ollama",
+    "express",
+    "proxy"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1"
+  }
+}
