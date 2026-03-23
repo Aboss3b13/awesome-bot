@@ -70,6 +70,11 @@ How to use it:
 3. Run workflow (or wait for auto-run on push).
 4. Open the workflow run and download artifact: **awesome-bot-apk**.
 
+Optional easy download:
+
+- The workflow also publishes the APK to Releases under tag `latest-apk`.
+- Release page: `https://github.com/Aboss3b13/awesome-bot/releases`
+
 Direct Actions page:
 
 - `https://github.com/Aboss3b13/awesome-bot/actions`

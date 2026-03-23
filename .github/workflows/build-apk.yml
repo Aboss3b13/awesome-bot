@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -47,3 +50,12 @@ jobs:
         with:
           name: awesome-bot-apk
           path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish APK to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-apk
+          name: Latest APK
+          body: Automated APK build from the latest main branch commit.
+          prerelease: true
+          files: mobile/android/app/build/outputs/apk/debug/app-debug.apk
