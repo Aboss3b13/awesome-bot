@@ -89,15 +89,17 @@ app.post("/api/chat", async (req, res) => {
     const systemForDiagrams = {
     role: "system",
     content:
-      "When user asks for a diagram, return ONLY one fenced Mermaid block and a short title line above it. Keep syntax valid. Supported diagram types: flowchart, mindmap, sequenceDiagram, classDiagram, stateDiagram-v2, erDiagram, journey, gantt.",
+      "When user asks for a diagram, return ONLY one fenced Mermaid block (starting with ```mermaid and ending with ```) and a short title line above it. Keep syntax valid. Supported diagram types: flowchart, mindmap, sequenceDiagram, classDiagram, stateDiagram-v2, erDiagram, journey, gantt. ONLY use ```mermaid.",
   };
   
   const systemForApps = {
     role: "system",
     content:
       "You are a helpful AI assistant. Answer conversations naturally.\n" +
-      "If the user asks you to write code or create a web app, wrap your code in a single HTML block. \n" +
-      "If the user asks for a chart or data visualization (bar, line, pie, etc.), return a valid JSON object representing a complete Chart.js configuration inside a ```chartjs code block. Do not write JS functions, only valid JSON.\n" +
+      "If the user asks you to write code or create a web app, wrap your code securely inside a single ```html code block.\n" +
+      "If the user asks for a chart or data visualization (bar, line, pie, radar, etc.), YOU MUST return a valid JSON object representing a complete Chart.js configuration EXACTLY inside a ```chartjs code block. Do not write JS functions, only valid JSON.\n" +
+      "If the user asks for a diagram, flowchart, mindmap, sequence, or structural map, YOU MUST return valid Mermaid.js code EXACTLY inside a ```mermaid code block.\n" +
+      "It is CRITICAL that you use the exact language tags (```html, ```chartjs, or ```mermaid) for these requests so the application can render them properly and the user can download them as PNGs. Never use generic ```code or ```json for charts/diagrams.\n" +
       "Otherwise, just reply normally.",
   };
 
