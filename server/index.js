@@ -86,13 +86,19 @@ app.post("/api/chat", async (req, res) => {
     return res.status(400).json({ error: "'messages' must be a non-empty array" });
   }
 
-  const systemForDiagrams = {
+    const systemForDiagrams = {
     role: "system",
     content:
       "When user asks for a diagram, return ONLY one fenced Mermaid block and a short title line above it. Keep syntax valid. Supported diagram types: flowchart, mindmap, sequenceDiagram, classDiagram, stateDiagram-v2, erDiagram, journey, gantt.",
   };
+  
+  const systemForApps = {
+    role: "system",
+    content:
+      "You are a coding assistant. When asked to create an app, game, or UI component, output a SINGLE completely contained HTML block (```html ... ```) incorporating ALL necessary CSS (inside <style>) and Javascript (inside <script>). Ensure it works completely standalone without external assets besides CDNs. Do NOT provide separate html, css, and js blocks. Combine them all into one HTML file block."
+  };
 
-  const finalMessages = mode === "diagram" ? [systemForDiagrams, ...messages] : messages;
+  const finalMessages = mode === "diagram" ? [systemForDiagrams, ...messages] : [systemForApps, ...messages];
 
   try {
     const data = await callOllama("/api/chat", {

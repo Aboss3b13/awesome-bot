@@ -382,6 +382,38 @@
         }
     }
 
+    function runHtmlCode(btn) {
+        const pre = btn.parentElement;
+        const code = pre.querySelector("code").innerText;
+        let iframeContainer = pre.nextElementSibling;
+        
+        // Toggle view
+        if (iframeContainer && iframeContainer.className === "app-container") {
+            iframeContainer.remove();
+            btn.innerHTML = '<i class="fa-solid fa-play"></i> Run App';
+            return;
+        }
+        
+        iframeContainer = document.createElement("div");
+        iframeContainer.className = "app-container";
+        const iframe = document.createElement("iframe");
+        iframe.style.width = "100%";
+        iframe.style.height = "400px";
+        iframe.style.border = "1px solid #334155";
+        iframe.style.borderRadius = "8px";
+        iframe.style.backgroundColor = "#ffffff";
+        iframe.style.marginTop = "10px";
+        
+        iframeContainer.appendChild(iframe);
+        pre.parentNode.insertBefore(iframeContainer, pre.nextSibling);
+        
+        iframe.contentWindow.document.open();
+        iframe.contentWindow.document.write(code);
+        iframe.contentWindow.document.close();
+        
+        btn.innerHTML = '<i class="fa-solid fa-stop"></i> Close App';
+    }
+
     function addMessage(role, content) {
         const row = document.createElement('div');
         row.className = `message-row ${role}`;
@@ -398,6 +430,40 @@
         if (role === 'bot') {
             const safeHtml = DOMPurify.sanitize(marked.parse(content));
             msg.innerHTML = safeHtml;
+            
+            // Add 'Run App' buttons to all HTML code blocks
+            const codeBlocks = msg.querySelectorAll("pre");
+            codeBlocks.forEach(pre => {
+                const codeNode = pre.querySelector("code.language-html");
+                if (codeNode) {
+                    pre.style.position = "relative";
+                    
+                    const runBtn = document.createElement("button");
+                    runBtn.innerHTML = '<i class="fa-solid fa-play"></i> Run App';
+                    runBtn.className = "run-app-btn";
+                    Object.assign(runBtn.style, {
+                        position: "absolute",
+                        top: "10px",
+                        right: "10px",
+                        backgroundColor: "#22c55e",
+                        color: "white",
+                        border: "none",
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                        transition: "background 0.2s"
+                    });
+                    
+                    runBtn.onmouseover = () => runBtn.style.backgroundColor = "#16a34a";
+                    runBtn.onmouseleave = () => runBtn.style.backgroundColor = "#22c55e";
+                    
+                    runBtn.onclick = () => runHtmlCode(runBtn);
+                    pre.appendChild(runBtn);
+                }
+            });
         } else {
             msg.textContent = content; // User text is raw string
         }
