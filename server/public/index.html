@@ -69,6 +69,17 @@
         .header-title i { color: var(--primary); font-size: 20px; }
 
         #model-status { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+        .model-select {
+            background-color: var(--bg-dark);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+        .model-select:focus { border-color: var(--text-muted); }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #ef4444; }
         .status-dot.active { background-color: #3fb950; box-shadow: 0 0 8px #3fb950; }
 
@@ -151,7 +162,12 @@
     <div id="chat-pane">
         <div class="workspace-header">
             <div class="header-title"><i class="fa-solid fa-code"></i> Awesome Studio</div>
-            <div id="model-status"><div id="status-indicator" class="status-dot"></div><span id="status-text">Detecting...</span></div>
+            <div id="model-status">
+                <div id="status-indicator" class="status-dot"></div>
+                <select id="model-select" class="model-select">
+                    <option value="">Detecting...</option>
+                </select>
+            </div>
         </div>
         <div id="messages"></div>
         <div id="input-area">
@@ -188,7 +204,7 @@
     const appFrame = document.getElementById('app-frame');
 
     let chatHistory = [];
-    const TARGET_MODEL = "gemma3:4b";
+    let savedModel = localStorage.getItem("selectedModel");
 
     messageInput.addEventListener('input', function() {
         this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 200) + 'px';
@@ -198,18 +214,45 @@
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     });
 
+    const modelSelect = document.getElementById('model-select');
+
+    modelSelect.addEventListener('change', () => {
+        localStorage.setItem("selectedModel", modelSelect.value);
+    });
+
     async function checkModels() {
         try {
             const res = await fetch('/api/models');
             const data = await res.json();
-            if (data.models && data.models.some(m => m.name === TARGET_MODEL || m.name.startsWith("gemma3:4b"))) {
-                document.getElementById('status-text').textContent = TARGET_MODEL;
+            modelSelect.innerHTML = '';
+            
+            if (data.models && data.models.length > 0) {
+                // Populate options
+                data.models.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.name;
+                    opt.textContent = m.name;
+                    modelSelect.appendChild(opt);
+                });
+                
+                // Select previous or default
+                if (savedModel && data.models.some(m => m.name === savedModel)) {
+                    modelSelect.value = savedModel;
+                } else if (data.models.some(m => m.name.startsWith("gemma"))) {
+                    modelSelect.value = data.models.find(m => m.name.startsWith("gemma")).name;
+                } else {
+                    modelSelect.value = data.models[0].name;
+                }
+                
                 document.getElementById('status-indicator').classList.add('active');
             } else {
-                document.getElementById('status-text').textContent = "Model Offline";
+                modelSelect.innerHTML = '<option value="">No Models Found</option>';
                 document.getElementById('status-indicator').classList.remove('active');
             }
-        } catch (err) { document.getElementById('status-text').textContent = "API Error"; }
+        } catch (err) {
+            modelSelect.innerHTML = '<option value="">API Error</option>';
+            document.getElementById('status-indicator').classList.remove('active');
+        }
     }
 
     function createMessageContainer(role) {
@@ -299,10 +342,16 @@
         parseMarkdownToDOM(botMsg, "", true);
 
         try {
+            const selectedModel = modelSelect.value;
+            if (!selectedModel) {
+                botMsg.innerHTML = `<span style="color:red">No model selected!</span>`;
+                return;
+            }
+
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ model: TARGET_MODEL, messages: chatHistory })
+                body: JSON.stringify({ model: selectedModel, messages: chatHistory })
             });
 
             if (!res.ok) {
