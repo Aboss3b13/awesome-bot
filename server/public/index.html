@@ -212,17 +212,19 @@
             align-items: center;
         }
 
-        .message-row { display: flex; gap: 16px; animation: slideUp 0.3s ease-out; width: 100%; max-width: 900px; min-width: 0; position: relative; }
+        .message-row { display: flex; gap: 16px; animation: slideUp 0.3s ease-out; width: 100%; max-width: 900px; min-width: 0; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .message-row.user { flex-direction: row-reverse; }
 
         .msg-edit-btn {
-            position: absolute; right: 100%; top: 50%; transform: translateY(-50%); margin-right: 12px;
-            background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border); padding: 8px; border-radius: 50%;
-            cursor: pointer; display: none; font-size: 13px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.2s;
+            background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border); 
+            width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+            cursor: pointer; opacity: 0; pointer-events: none; visibility: hidden; font-size: 13px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.2s;
+            margin: auto 8px auto 0;
+            display: flex; align-items: center; justify-content: center;
         }
-        .message-row.user:hover .msg-edit-btn { display: flex; align-items: center; justify-content: center; }
-        .msg-edit-btn:hover { color: var(--primary); border-color: var(--primary); }
+        .message-row.user:hover .msg-edit-btn { opacity: 1; pointer-events: auto; visibility: visible; }
+        .msg-edit-btn:hover { color: var(--primary); border-color: var(--primary); transform: scale(1.1); }
 
         .avatar {
             width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
@@ -275,8 +277,8 @@
         }
         .input-container {
             display: flex; background-color: var(--bg-input); border: 1px solid var(--border);
-            border-radius: 24px; padding: 8px 16px; align-items: flex-end; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3); width: 100%; max-width: 900px;
+            border-radius: 24px; padding: 8px 16px; align-items: flex-end; flex-wrap: wrap; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3); width: 100%; max-width: 900px; position: relative;
         }
         .input-container:focus-within { 
             border-color: var(--primary); box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2), 0 4px 14px rgba(0, 0, 0, 0.4); 
@@ -369,9 +371,14 @@
         <div id="messages"></div>
         <div id="input-area">
             <div class="input-container">
-                <textarea id="message-input" placeholder="Type a prompt to code an app..." rows="1"></textarea>
-                <label for="file-upload" class="file-btn" title="Upload Image"><i class="fa-solid fa-paperclip"></i></label>
-                <input type="file" id="file-upload" style="display: none;" accept="image/*">
+                <div id="doc-preview" style="display: none; width: 100%; border-radius: 8px; background: var(--bg-input); padding: 8px 12px; margin-bottom: 10px; border: 1px solid var(--border); font-size: 13px; font-weight: 500; color: var(--text-main); display: flex; align-items: center; gap: 8px; box-sizing: border-box;">
+                    <i class="fa-solid fa-file-alt" style="color: var(--primary);"></i>
+                    <span id="doc-filename" style="flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></span>
+                    <button onclick="clearAttachedFile()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <textarea id="message-input" placeholder="Type a prompt or upload a PDF/Word file to analyze..." rows="1"></textarea>
+                <label for="file-upload" class="file-btn" title="Upload Image or Document"><i class="fa-solid fa-paperclip"></i></label>
+                <input type="file" id="file-upload" style="display: none;" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.md,.json,.js,.html">
                 <img id="image-preview" class="image-preview">
                 <button id="mic-btn" class="mic-btn" title="Talk to AI"><i class="fa-solid fa-microphone"></i></button>
                 <button id="send-btn" disabled><i class="fa-solid fa-arrow-up"></i></button>
@@ -404,18 +411,72 @@
     const fileUpload = document.getElementById('file-upload');
     const imagePreview = document.getElementById('image-preview');
     let currentImageBase64 = null;
-    if (fileUpload && imagePreview) {
-        fileUpload.addEventListener('change', function() {
+    let currentDocumentText = null;
+    let currentDocumentName = null;
+
+    function clearAttachedFile() {
+        currentImageBase64 = null;
+        currentDocumentText = null;
+        currentDocumentName = null;
+        const img = document.getElementById('image-preview');
+        if (img) img.style.display = 'none';
+        const docPrev = document.getElementById('doc-preview');
+        if (docPrev) docPrev.style.display = 'none';
+        if (fileUpload) fileUpload.value = '';
+        sendBtn.disabled = !messageInput.value;
+    }
+
+    if (fileUpload) {
+        fileUpload.addEventListener('change', async function() {
+            clearAttachedFile();
             const file = this.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = e => {
-                currentImageBase64 = e.target.result;
-                imagePreview.src = currentImageBase64;
-                imagePreview.style.display = 'block';
-                sendBtn.disabled = false;
-            };
-            reader.readAsDataURL(file);
+
+            // Handle images natively
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    currentImageBase64 = e.target.result;
+                    if (imagePreview) {
+                        imagePreview.src = currentImageBase64;
+                        imagePreview.style.display = 'block';
+                    }
+                    sendBtn.disabled = false;
+                };
+                reader.readAsDataURL(file);
+                return;
+            }
+
+            // Handle documents via API
+            try {
+                const docPrev = document.getElementById('doc-preview');
+                const docFname = document.getElementById('doc-filename');
+                docPrev.style.display = 'flex';
+                docFname.innerHTML = 'Uploading <i class="fa-solid fa-spinner fa-spin"></i>';
+
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const response = await fetch("/api/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    currentDocumentText = data.text;
+                    currentDocumentName = data.filename;
+                    docFname.textContent = currentDocumentName;
+                    sendBtn.disabled = false;
+                } else {
+                    alert(data.error);
+                    clearAttachedFile();
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Upload failed.");
+                clearAttachedFile();
+            }
         });
     }
 
@@ -586,8 +647,14 @@
                     imgEl.style.maxWidth = '200px';
                     container.appendChild(imgEl);
                 }
+                if (msg._originalDocName) {
+                    const docBadge = document.createElement('div');
+                    docBadge.innerHTML = `<i class="fa-solid fa-file-alt"></i> <strong>${msg._originalDocName}</strong>`;
+                    docBadge.style.cssText = "background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 13px; margin-bottom: 8px; display: inline-block;";
+                    container.appendChild(docBadge);
+                }
                 const textDiv = document.createElement('div');
-                textDiv.textContent = msg.content;
+                textDiv.textContent = msg._originalText !== undefined ? msg._originalText : msg.content;
                 container.appendChild(textDiv);
                 
                 const editBtn = document.createElement('button');
@@ -595,21 +662,27 @@
                 editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
                 editBtn.title = 'Edit Message';
                 editBtn.onclick = () => {
-                    messageInput.value = msg.content;
+                    messageInput.value = msg._originalText !== undefined ? msg._originalText : msg.content;
                     if (msg.images && msg.images.length > 0 && typeof imagePreview !== 'undefined') {
                         currentImageBase64 = "data:image/png;base64," + msg.images[0];
                         imagePreview.src = currentImageBase64;
                         imagePreview.style.display = 'block';
                     }
+                    if (msg._originalDocText) {
+                        currentDocumentText = msg._originalDocText;
+                        currentDocumentName = msg._originalDocName;
+                        document.getElementById('doc-preview').style.display = 'flex';
+                        document.getElementById('doc-filename').textContent = currentDocumentName;
+                    }
                     sessions[currentSessionId].history = sessions[currentSessionId].history.slice(0, i);
                     chatHistory = sessions[currentSessionId].history;
                     saveSessions();
                     renderMessages();
-                    sendBtn.disabled = (!messageInput.value && !currentImageBase64);
+                    sendBtn.disabled = false;
                     messageInput.style.height = 'auto';
                     messageInput.focus();
                 };
-                container.parentNode.appendChild(editBtn);
+                container.appendChild(editBtn);
             } else {
                 parseMarkdownToDOM(container, msg.content, false);
             }
@@ -991,7 +1064,14 @@
 
     async function sendMessage() {
         const text = messageInput.value.trim();
-        if (!text && !currentImageBase64) return;
+        if (!text && !currentImageBase64 && !currentDocumentText) return;
+
+        let finalPayloadText = text;
+        let displayNameText = text;
+
+        if (currentDocumentText) {
+            finalPayloadText = `[Attached Document: ${currentDocumentName}]\n${currentDocumentText}\n\nUser prompt: ${text}`;
+        }
 
         messageInput.value = ''; messageInput.style.height = 'auto';
         messageInput.disabled = true; sendBtn.disabled = true;
@@ -1007,11 +1087,19 @@
             userMsg.appendChild(imgEl);
         }
         
+        if (currentDocumentText) {
+            const docBadge = document.createElement('div');
+            docBadge.innerHTML = `<i class="fa-solid fa-file-alt"></i> <strong>${currentDocumentName}</strong>`;
+            docBadge.style.cssText = "background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 13px; margin-bottom: 8px; display: inline-block;";
+            userMsg.appendChild(docBadge);
+        }
+
         const textDiv = document.createElement('div');
-        textDiv.textContent = text;
+        textDiv.textContent = displayNameText;
         userMsg.appendChild(textDiv);
         
-        const payloadMsg = { role: 'user', content: text };
+        // Final payload to send to Ollama MUST have the text attached. We keep the raw original text locally in another field so we can edit it smoothly later, but default Ollama history format doesn't have custom fields.
+        const payloadMsg = { role: 'user', content: finalPayloadText, _originalText: text, _originalDocName: currentDocumentName, _originalDocText: currentDocumentText };
         if (currentImageBase64) {
              payloadMsg.images = [currentImageBase64.split(',')[1]]; // remove data:image/...;base64,
         }
@@ -1023,21 +1111,27 @@
         editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
         editBtn.title = 'Edit Message';
         editBtn.onclick = () => {
-            messageInput.value = payloadMsg.content;
+            messageInput.value = payloadMsg._originalText !== undefined ? payloadMsg._originalText : payloadMsg.content;
             if (payloadMsg.images && payloadMsg.images.length > 0) {
                 currentImageBase64 = "data:image/png;base64," + payloadMsg.images[0];
                 imagePreview.src = currentImageBase64;
                 imagePreview.style.display = 'block';
             }
+            if (payloadMsg._originalDocText) {
+                currentDocumentText = payloadMsg._originalDocText;
+                currentDocumentName = payloadMsg._originalDocName;
+                document.getElementById('doc-preview').style.display = 'flex';
+                document.getElementById('doc-filename').textContent = currentDocumentName;
+            }
             sessions[currentSessionId].history = sessions[currentSessionId].history.slice(0, userIndex);
             chatHistory = sessions[currentSessionId].history;
             saveSessions();
             renderMessages();
-            sendBtn.disabled = (!messageInput.value && !currentImageBase64);
+            sendBtn.disabled = false;
             messageInput.style.height = 'auto';
             messageInput.focus();
         };
-        userMsg.parentNode.appendChild(editBtn);
+        userMsg.appendChild(editBtn);
         
         if (imagePreview) {
             imagePreview.style.display = 'none';

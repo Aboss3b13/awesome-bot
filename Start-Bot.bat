@@ -17,7 +17,7 @@ start http://localhost:8787
 
 echo.
 echo =========================================
-echo Starting Cloudflare Tunnel to make it public!
+echo Starting ngrok to make it public!
 echo =========================================
 cd ..
-.\cloudflared.exe tunnel --url http://localhost:8787
+ngrok http 8787

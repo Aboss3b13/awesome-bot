@@ -1,12 +1,17 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const multer = require("multer");
+const pdfParse = require("pdf-parse");
+const mammoth = require("mammoth");
+const xlsx = require("xlsx");
 
 dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT || 8787);
 const ollamaBaseUrl = (process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434").replace(/\/$/, "");
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
@@ -48,6 +53,44 @@ app.get("/health", async (req, res) => {
       ollamaReachable: false,
       error: String(error.message || error),
     });
+  }
+});
+
+app.post("/api/upload", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+    const buffer = req.file.buffer;
+    const name = req.file.originalname.toLowerCase();
+    let text = "";
+
+    try {
+      if (name.endsWith(".pdf")) {
+        const data = await pdfParse(buffer);
+        text = data.text;
+      } else if (name.endsWith(".docx") || name.endsWith(".doc")) {
+        const result = await mammoth.extractRawText({ buffer });
+        text = result.value;
+      } else if (name.match(/\.(xlsx|xls|csv)$/)) {
+        const workbook = xlsx.read(buffer, { type: "buffer" });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        text = xlsx.utils.sheet_to_csv(firstSheet);
+      } else {
+        text = buffer.toString("utf8");
+      }
+    } catch (parseError) {
+      return res.status(400).json({ error: "Could not parse file content. Make sure the file is not corrupted or password protected." });
+    }
+
+    // Limit document context to prevent blowing up the LLM's context window
+    const maxLength = 200000;
+    if (text.length > maxLength) {
+      text = text.substring(0, maxLength) + "\n\n[...TRUNCATED due to length...]";
+    }
+
+    res.json({ text: text.trim(), filename: req.file.originalname });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "File processing failed: " + err.message });
   }
 });
 
