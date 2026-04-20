@@ -64,6 +64,10 @@
 
         * { box-sizing: border-box; }
 
+        /* Suppress Mermaid error SVGs from flashing in the DOM */
+        body > svg[id^="dmermaid"] { display: none !important; opacity: 0 !important; position: absolute !important; z-index: -9999 !important; }
+        svg.error-icon { display: none !important; }
+
         body {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-dark); color: var(--text-main);
@@ -840,10 +844,22 @@
 
                     if (isStreaming) {
                         const tempId = "mermaid-" + Math.floor(Math.random() * 1000000) + "-" + blockIndex;
-                        mermaid.render(tempId, code).then(res => {
+                        mermaid.parse(code, { suppressErrors: true }).then((isValid) => {
+                            if (isValid !== false) {
+                                return mermaid.render(tempId, code);
+                            } else {
+                                throw new Error("Invalid syntax");
+                            }
+                        }).then(res => {
                             msgContainer.__mermaidCache[blockIndex] = res.svg;
                             mermaidDiv.innerHTML = res.svg;
                         }).catch(e => {
+                            // Clean up stray error bombs rendered by Mermaid
+                            const stray1 = document.getElementById('d' + tempId);
+                            if (stray1) stray1.remove();
+                            const stray2 = document.getElementById(tempId);
+                            if (stray2 && stray2.parentNode === document.body) stray2.remove();
+
                             if (msgContainer.__mermaidCache[blockIndex]) {
                                 mermaidDiv.innerHTML = msgContainer.__mermaidCache[blockIndex];
                             } else {
