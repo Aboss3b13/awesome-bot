@@ -654,8 +654,8 @@
             if (codeEl) {
                 const isHtml = codeEl.classList.contains("language-html") || markdownContent.includes("<html") || markdownContent.includes("<!DOCTYPE");
                 const isMermaid = codeEl.classList.contains("language-mermaid");
-                const isChart = codeEl.classList.contains("language-chartjs") || codeEl.classList.contains("language-json") && code.includes('"type"');
                 const code = codeEl.textContent;
+                const isChart = codeEl.classList.contains("language-chartjs") || (codeEl.classList.contains("language-json") && code.includes('"type"'));
                 
                 if (isMermaid) {
                     const mermaidDiv = document.createElement("div");
