@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Awesome AI Studio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
@@ -64,7 +64,7 @@
         * { box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-dark); color: var(--text-main);
             margin: 0; padding: 0; display: flex; height: 100dvh; overflow: hidden;
             -webkit-tap-highlight-color: transparent;
@@ -263,7 +263,7 @@
             border-radius: 12px; padding: 20px; margin: 14px 0; overflow-x: auto; position: relative;
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.2); max-width: 100%;
         }
-        .message.bot code { font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace; font-size: 0.9em; background-color: var(--bot-code-bg); padding: 4px 8px; border-radius: 6px; white-space: pre-wrap; word-break: break-word; }
+        .message.bot code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 0.9em; background-color: var(--bot-code-bg); padding: 4px 8px; border-radius: 6px; white-space: pre-wrap; word-break: break-word; }
         .message.bot pre code { background-color: transparent; padding: 0; white-space: pre; word-break: normal; }
         
         .run-app-btn, .download-btn {
@@ -825,6 +825,14 @@
                     mermaidDiv.className = "mermaid";
                     mermaidDiv.textContent = code;
                     pre.parentNode.replaceChild(mermaidDiv, pre);
+                    
+                    if (isStreaming && window.mermaid) {
+                        try {
+                            window.mermaid.parse(code).then((isValid) => {
+                                if(isValid) window.mermaid.init(undefined, mermaidDiv);
+                            }).catch(() => {});
+                        } catch(e) {}
+                    }
                     return;
                 }
 
@@ -837,18 +845,31 @@
                     wrapper.style.margin = "10px 0";
                     pre.parentNode.replaceChild(wrapper, pre);
 
-                    if (isStreaming) {
-                        wrapper.innerHTML = "<span style='color: #888;'><i class='fa-solid fa-spinner fa-spin'></i> Rendering Chart...</span>";
-                    } else {
-                        const canvas = document.createElement("canvas");
-                        wrapper.appendChild(canvas);
+                    const canvas = document.createElement("canvas");
+                    wrapper.appendChild(canvas);
+                    
+                    let parsedConfig = null;
+                    try {
+                        parsedConfig = JSON.parse(code);
+                    } catch(e) {
+                         if (!isStreaming) wrapper.innerHTML = "<span style='color:red'>Invalid Chart YAML/JSON</span>";
+                    }
+
+                    if (parsedConfig) {
                         try {
-                            const config = JSON.parse(code);
-                            // Avoid animation spam on re-renders by disabling initial animation if needed, but Chart.js handles this well enough
-                            const chartInstance = new Chart(canvas, config);
-                            
-                            wrapper.onclick = () => {
-                                const modal = document.createElement("div");
+                            if (isStreaming && parsedConfig.options && parsedConfig.options.animation) {
+                                parsedConfig.options.animation = false;
+                            }
+                            new Chart(canvas, parsedConfig);
+                        } catch(e) {}
+                    } else if (isStreaming) {
+                        wrapper.innerHTML = "<span style='color: #888;'><i class='fa-solid fa-spinner fa-spin'></i> Rendering Chart...</span>";
+                        return; // skip attaching events until done
+                    }
+
+                    if (!isStreaming && parsedConfig) {
+                        wrapper.onclick = () => {
+                            const modal = document.createElement("div");
                                 modal.className = "diagram-modal";
                                 
                                 const modalContent = document.createElement("div");
@@ -871,7 +892,7 @@
                                 
                                 // Chart.js needs a beat to measure the modal DOM size
                                 setTimeout(() => {
-                                    new Chart(canvasClone, config);
+                                    new Chart(canvasClone, parsedConfig);
                                 }, 50);
                                 
                                 const actions = document.createElement("div");
@@ -933,12 +954,14 @@
 
                 // Real-time live frame rendering for active streaming
                 if (isStreaming && isHtml && code.length > 50) {
+                    pre.style.display = "none";
                     if (!chatPane.classList.contains('split')) openAppViewer(code);
                     else renderToIframe(code);
                 }
                 
                 // Mount RUN APP and DOWNLOAD buttons
                 if (!isStreaming && isHtml) {
+                    pre.style.display = "block";
                     hasHtmlApp = true;
                     if (!pre.querySelector('.run-app-btn')) {
                         const runBtn = document.createElement("button");
