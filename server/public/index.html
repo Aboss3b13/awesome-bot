@@ -52,12 +52,16 @@
 
         @media (max-width: 768px) {
             #layout { flex-direction: column; }
-            #chat-pane.split { max-width: 100%; height: 50vh; }
-            #app-viewer-pane { height: 50vh; display: none; }
+            #chat-pane.split { max-width: 100%; height: 100vh; margin: 0; }
+            #app-viewer-pane { 
+                height: 100vh; display: none; width: 100vw; 
+                position: fixed; top: 0; left: 0; z-index: 9999;
+                border-left: none; box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+            }
             #app-viewer-pane.active { display: flex; }
             .workspace-header { padding: 0 10px; height: 50px; }
-            #chat-history { padding: 10px; }
-            #chat-input-container { padding: 10px; }
+            #messages { padding: 10px; }
+            .input-container { padding: 10px; }
         }
 
         .workspace-header {
@@ -80,15 +84,17 @@
             cursor: pointer;
         }
         .model-select:focus { border-color: var(--text-muted); }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #ef4444; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #ef4444; box-shadow: 0 0 8px #ef4444; transition: background 0.3s; }
         .status-dot.active { background-color: #3fb950; box-shadow: 0 0 8px #3fb950; }
 
         #messages {
             flex-grow: 1; padding: 30px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth;
+            display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth;
+            background: linear-gradient(180deg, var(--bg-dark) 0%, #05080b 100%);
         }
 
-        .message-row { display: flex; gap: 16px; }
+        .message-row { display: flex; gap: 16px; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .message-row.user { flex-direction: row-reverse; }
 
         .avatar {
@@ -147,7 +153,7 @@
         #send-btn:disabled { opacity: 0.5; }
 
         .viewer-chrome {
-            height: 50px; background-color: #f6f8fa; color: #24292f;
+            height: 50px; background-color: #f6f8fa; color: #24292f; flex-shrink: 0;
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 20px; border-bottom: 1px solid #d0d7de; font-family: monospace; font-size: 13px; font-weight: bold;
         }
@@ -273,9 +279,11 @@
     }
 
     function renderToIframe(code) {
-        appFrame.contentWindow.document.open();
-        appFrame.contentWindow.document.write(code);
-        appFrame.contentWindow.document.close();
+        if (!viewerPane.classList.contains('active')) return;
+        
+        // Use srcdoc instead of document.write to properly reset document state and prevent script blocking
+        // A timeout fixes some rendering bugs where srcdoc behaves asynchronously during frequent updates
+        appFrame.srcdoc = code;
     }
 
     function openAppViewer(code) {
@@ -390,6 +398,22 @@
             // Re-render completely once done
             parseMarkdownToDOM(botMsg, botFullContent, false);
             chatHistory.push({ role: 'assistant', content: botFullContent });
+            
+            // If the viewer is open, refresh to the final code state to ensure all scripts run
+            if (viewerPane.classList.contains('active')) {
+                const codeBlocks = botMsg.querySelectorAll("pre code.language-html");
+                if (codeBlocks.length > 0) {
+                    renderToIframe(codeBlocks[codeBlocks.length - 1].textContent);
+                } else if (botFullContent.includes("<html") || botFullContent.includes("<!DOCTYPE")) {
+                    const fallbackBlocks = botMsg.querySelectorAll("pre code");
+                    for (const fallback of fallbackBlocks) {
+                        if (fallback.textContent.includes("<html") || fallback.textContent.includes("<style>")) {
+                            renderToIframe(fallback.textContent);
+                            break;
+                        }
+                    }
+                }
+            }
 
         } catch (err) {
             botMsg.innerHTML = `<span style="color:red">Failed: ${err.message}</span>`;
