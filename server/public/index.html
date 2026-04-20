@@ -152,12 +152,12 @@
         .status-dot.active { background-color: #3fb950; box-shadow: 0 0 8px #3fb950; }
 
         #messages {
-            flex-grow: 1; padding: 30px; overflow-y: auto;
+            flex-grow: 1; padding: 30px; overflow-y: auto; overflow-x: hidden;
             display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth;
             background: linear-gradient(180deg, var(--bg-dark) 0%, var(--gradient-stop) 100%);
         }
 
-        .message-row { display: flex; gap: 16px; animation: slideUp 0.3s ease-out; }
+        .message-row { display: flex; gap: 16px; animation: slideUp 0.3s ease-out; max-width: 100%; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .message-row.user { flex-direction: row-reverse; }
 
@@ -168,13 +168,16 @@
         .bot .avatar { color: var(--primary); }
         .user .avatar { color: white; background-color: var(--primary); }
 
-        .message { max-width: 83%; padding: 14px 20px; line-height: 1.6; font-size: 15px; border-radius: 20px; }
+        .message { 
+            max-width: 83%; padding: 14px 20px; line-height: 1.6; font-size: 15px; border-radius: 20px; 
+            word-wrap: break-word; overflow-wrap: anywhere; min-width: 0; /* fixes overflow */
+        }
         .message.user { 
             background: linear-gradient(135deg, #007aff, #005bb5); color: white; border: none; 
             border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25); 
             line-height: 1.5; font-weight: 400; padding: 12px 18px;
         }
-        .message.bot { width: 100%; border: none; padding: 0 16px; font-weight: 300; letter-spacing: 0.2px; }
+        .message.bot { width: 100%; border: none; padding: 0 16px; font-weight: 300; letter-spacing: 0.2px; overflow-x: hidden; }
 
         .cursor-blink {
             display: inline-block; width: 6px; height: 16px; background-color: var(--text-main);
