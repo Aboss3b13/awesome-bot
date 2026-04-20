@@ -738,10 +738,10 @@
                                 const actions = document.createElement("div");
                                 actions.className = "diagram-modal-actions";
                                 
-                                const downloadBtn = document.createElement("button");
-                                downloadBtn.className = "diagram-modal-btn";
-                                downloadBtn.innerHTML = '<i class="fa-solid fa-download"></i> Download SVG';
-                                downloadBtn.onclick = (e) => {
+                                const downloadSvgBtn = document.createElement("button");
+                                downloadSvgBtn.className = "diagram-modal-btn";
+                                downloadSvgBtn.innerHTML = '<i class="fa-solid fa-file-code"></i> SVG';
+                                downloadSvgBtn.onclick = (e) => {
                                     e.stopPropagation();
                                     const svgData = new XMLSerializer().serializeToString(svg);
                                     const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
@@ -752,8 +752,42 @@
                                     a.click();
                                     URL.revokeObjectURL(url);
                                 };
+
+                                const downloadPngBtn = document.createElement("button");
+                                downloadPngBtn.className = "diagram-modal-btn";
+                                downloadPngBtn.innerHTML = '<i class="fa-solid fa-image"></i> PNG';
+                                downloadPngBtn.onclick = (e) => {
+                                    e.stopPropagation();
+                                    let svgData = new XMLSerializer().serializeToString(svg);
+                                    if (!svgData.includes('xmlns="http://www.w3.org/2000/svg"')) {
+                                        svgData = svgData.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+                                    }
+                                    const blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+                                    const url = URL.createObjectURL(blob);
+                                    
+                                    const img = new Image();
+                                    img.onload = () => {
+                                        const canvas = document.createElement("canvas");
+                                        // 2x scaling for high-res PNG
+                                        canvas.width = (img.width || 800) * 2;
+                                        canvas.height = (img.height || 600) * 2;
+                                        const ctx = canvas.getContext("2d");
+                                        ctx.fillStyle = "white"; // White background looks better for docs than transparent
+                                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                        
+                                        const pngUrl = canvas.toDataURL("image/png");
+                                        const a = document.createElement("a");
+                                        a.href = pngUrl;
+                                        a.download = `diagram-${Date.now()}.png`;
+                                        a.click();
+                                        URL.revokeObjectURL(url);
+                                    };
+                                    img.src = url;
+                                };
                                 
-                                actions.appendChild(downloadBtn);
+                                actions.appendChild(downloadPngBtn);
+                                actions.appendChild(downloadSvgBtn);
                                 modal.appendChild(modalContent);
                                 modal.appendChild(actions);
                                 
