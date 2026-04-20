@@ -96,7 +96,9 @@ app.post("/api/chat", async (req, res) => {
     role: "system",
     content:
       "You are a helpful AI assistant. Answer conversations naturally.\n" +
-      "If the user asks you to write code or create a web app, wrap your code in a single HTML block. Otherwise, just reply normally.",
+      "If the user asks you to write code or create a web app, wrap your code in a single HTML block. \n" +
+      "If the user asks for a chart or data visualization (bar, line, pie, etc.), return a valid JSON object representing a complete Chart.js configuration inside a ```chartjs code block. Do not write JS functions, only valid JSON.\n" +
+      "Otherwise, just reply normally.",
   };
 
   const finalMessages = mode === "diagram" ? [systemForDiagrams, ...messages] : [systemForApps, ...messages];

@@ -13,6 +13,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root {
@@ -653,6 +654,7 @@
             if (codeEl) {
                 const isHtml = codeEl.classList.contains("language-html") || markdownContent.includes("<html") || markdownContent.includes("<!DOCTYPE");
                 const isMermaid = codeEl.classList.contains("language-mermaid");
+                const isChart = codeEl.classList.contains("language-chartjs") || codeEl.classList.contains("language-json") && code.includes('"type"');
                 const code = codeEl.textContent;
                 
                 if (isMermaid) {
@@ -660,6 +662,109 @@
                     mermaidDiv.className = "mermaid";
                     mermaidDiv.textContent = code;
                     pre.parentNode.replaceChild(mermaidDiv, pre);
+                    return;
+                }
+
+                if (isChart) {
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "mermaid-diagram-container interactive-diagram chart-container";
+                    wrapper.style.background = "white";
+                    wrapper.style.padding = "10px";
+                    wrapper.style.borderRadius = "8px";
+                    wrapper.style.margin = "10px 0";
+                    pre.parentNode.replaceChild(wrapper, pre);
+
+                    if (isStreaming) {
+                        wrapper.innerHTML = "<span style='color: #888;'><i class='fa-solid fa-spinner fa-spin'></i> Rendering Chart...</span>";
+                    } else {
+                        const canvas = document.createElement("canvas");
+                        wrapper.appendChild(canvas);
+                        try {
+                            const config = JSON.parse(code);
+                            // Avoid animation spam on re-renders by disabling initial animation if needed, but Chart.js handles this well enough
+                            const chartInstance = new Chart(canvas, config);
+                            
+                            wrapper.onclick = () => {
+                                const modal = document.createElement("div");
+                                modal.className = "diagram-modal";
+                                
+                                const modalContent = document.createElement("div");
+                                modalContent.className = "diagram-modal-content";
+                                modalContent.style.background = "white";
+                                modalContent.style.padding = "20px";
+                                modalContent.style.borderRadius = "12px";
+                                modalContent.style.width = "80vw"; // Give charts more room
+                                
+                                const closeBtn = document.createElement("div");
+                                closeBtn.className = "diagram-modal-close";
+                                closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                                closeBtn.onclick = () => document.body.removeChild(modal);
+                                
+                                const canvasClone = document.createElement("canvas");
+                                canvasClone.style.maxWidth = "100%";
+                                canvasClone.style.maxHeight = "70vh";
+                                modalContent.appendChild(closeBtn);
+                                modalContent.appendChild(canvasClone);
+                                
+                                // Chart.js needs a beat to measure the modal DOM size
+                                setTimeout(() => {
+                                    new Chart(canvasClone, config);
+                                }, 50);
+                                
+                                const actions = document.createElement("div");
+                                actions.className = "diagram-modal-actions";
+                                
+                                const downloadPngBtn = document.createElement("button");
+                                downloadPngBtn.className = "diagram-modal-btn";
+                                downloadPngBtn.innerHTML = '<i class="fa-solid fa-image"></i> PNG Download';
+                                downloadPngBtn.onclick = (e) => {
+                                    e.stopPropagation();
+                                    const a = document.createElement("a");
+                                    // Give it a white background instead of transparent
+                                    const tmpCanvas = document.createElement('canvas');
+                                    tmpCanvas.width = canvasClone.width;
+                                    tmpCanvas.height = canvasClone.height;
+                                    const ctx = tmpCanvas.getContext('2d');
+                                    ctx.fillStyle = 'white';
+                                    ctx.fillRect(0, 0, tmpCanvas.width, tmpCanvas.height);
+                                    ctx.drawImage(canvasClone, 0, 0);
+                                    a.href = tmpCanvas.toDataURL("image/png");
+                                    a.download = `chart-${Date.now()}.png`;
+                                    a.click();
+                                };
+                                
+                                const downloadJsonBtn = document.createElement("button");
+                                downloadJsonBtn.className = "diagram-modal-btn";
+                                downloadJsonBtn.innerHTML = '<i class="fa-solid fa-file-code"></i> JSON Config';
+                                downloadJsonBtn.onclick = (e) => {
+                                    e.stopPropagation();
+                                    const blob = new Blob([code], { type: "application/json" });
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement("a");
+                                    a.href = url;
+                                    a.download = `chart-config-${Date.now()}.json`;
+                                    a.click();
+                                    URL.revokeObjectURL(url);
+                                };
+                                
+                                actions.appendChild(downloadPngBtn);
+                                actions.appendChild(downloadJsonBtn);
+                                modal.appendChild(modalContent);
+                                modal.appendChild(actions);
+                                
+                                modal.onclick = (e) => {
+                                    if (e.target === modal) {
+                                        document.body.removeChild(modal);
+                                    }
+                                };
+                                
+                                document.body.appendChild(modal);
+                            };
+                        } catch (err) {
+                            wrapper.textContent = "Error parsing chart JSON: " + err.message;
+                            wrapper.style.color = "red";
+                        }
+                    }
                     return;
                 }
 
