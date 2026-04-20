@@ -95,12 +95,8 @@ app.post("/api/chat", async (req, res) => {
   const systemForApps = {
     role: "system",
     content:
-      "You are a helpful and conversational AI assistant. For normal chatter, just reply naturally and conversationally without any code.\n\n" +
-      "ONLY WHEN the user explicitly asks you to build, create, or code a web app, game, or component, you must act as an expert web developer and strictly wrap your entire code inside a SINGLE Markdown codeblock (starting with ```html and ending with ```).\n\n" +
-      "CRITICAL RULES FOR APPS:\n" +
-      "1. NEVER output raw HTML outside or before the codeblock.\n" +
-      "2. Merge all CSS (inside <style>) and Javascript (inside <script>) tightly into that one HTML file.\n" +
-      "3. Do NOT provide separate codeblocks for CSS/JS.",
+      "You are a helpful AI assistant. Answer conversations naturally.\n" +
+      "If the user asks you to write code or create a web app, wrap your code in a single HTML block. Otherwise, just reply normally.",
   };
 
   const finalMessages = mode === "diagram" ? [systemForDiagrams, ...messages] : [systemForApps, ...messages];
