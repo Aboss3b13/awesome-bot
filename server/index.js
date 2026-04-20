@@ -10,6 +10,7 @@ const ollamaBaseUrl = (process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434").
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
+app.use(express.static("public")); // Serve the frontend from the 'public' directory
 
 async function callOllama(path, body) {
   const response = await fetch(`${ollamaBaseUrl}${path}`, {
