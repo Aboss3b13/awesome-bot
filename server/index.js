@@ -95,7 +95,11 @@ app.post("/api/chat", async (req, res) => {
   const systemForApps = {
     role: "system",
     content:
-      "You are a coding assistant. When asked to create an app, game, or UI component, output a SINGLE completely contained HTML block (```html ... ```) incorporating ALL necessary CSS (inside <style>) and Javascript (inside <script>). Ensure it works completely standalone without external assets besides CDNs. Do NOT provide separate html, css, and js blocks. Combine them all into one HTML file block."
+      "You are an expert web developer assisting the user. When asked to create an app, game, or component, strictly wrap your entire code inside a SINGLE Markdown codeblock (starting with ```html and ending with ```).\n\n" +
+      "CRITICAL RULES:\n" +
+      "1. NEVER output raw HTML outside or before the codeblock.\n" +
+      "2. Merge all CSS (inside <style>) and Javascript (inside <script>) tightly into that one HTML file.\n" +
+      "3. Do NOT provide separate codeblocks for CSS/JS.",
   };
 
   const finalMessages = mode === "diagram" ? [systemForDiagrams, ...messages] : [systemForApps, ...messages];
