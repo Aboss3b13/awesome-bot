@@ -11,6 +11,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
     <style>
         :root {
             --bg-dark: #0d1117;
@@ -292,6 +295,11 @@
         .mic-btn.listening { color: #f85149; animation: pulse 1.5s infinite; text-shadow: 0 0 10px rgba(248, 81, 73, 0.6); }
         @keyframes pulse { 0% { transform: scale(0.95); } 50% { transform: scale(1.1); } 100% { transform: scale(0.95); } }
 
+        .file-btn { background: transparent; color: var(--text-muted); border: none; width: 36px; height: 36px; border-radius: 50%; margin-bottom: 4px; margin-left: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: color 0.2s; font-size: 18px; flex-shrink: 0; }
+        .file-btn:hover { color: var(--text-main); }
+        .image-preview { max-height: 200px; max-width: 100%; border-radius: 8px; display: none; object-fit: contain; margin-top: 10px; margin-bottom: 10px; }
+        .mermaid { background: white; padding: 10px; border-radius: 8px; margin: 10px 0; max-width: 100%; overflow: auto; }
+
         .viewer-chrome {
             height: 50px; background-color: #f6f8fa; color: #24292f; flex-shrink: 0;
             display: flex; align-items: center; justify-content: space-between;
@@ -334,6 +342,9 @@
         <div id="input-area">
             <div class="input-container">
                 <textarea id="message-input" placeholder="Type a prompt to code an app..." rows="1"></textarea>
+                <label for="file-upload" class="file-btn" title="Upload Image"><i class="fa-solid fa-paperclip"></i></label>
+                <input type="file" id="file-upload" style="display: none;" accept="image/*">
+                <img id="image-preview" class="image-preview">
                 <button id="mic-btn" class="mic-btn" title="Talk to AI"><i class="fa-solid fa-microphone"></i></button>
                 <button id="send-btn" disabled><i class="fa-solid fa-arrow-up"></i></button>
             </div>
@@ -361,6 +372,25 @@
     const messagesDiv = document.getElementById('messages');
     const messageInput = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
+    
+    const fileUpload = document.getElementById('file-upload');
+    const imagePreview = document.getElementById('image-preview');
+    let currentImageBase64 = null;
+    if (fileUpload && imagePreview) {
+        fileUpload.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                currentImageBase64 = e.target.result;
+                imagePreview.src = currentImageBase64;
+                imagePreview.style.display = 'block';
+                sendBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
     const chatPane = document.getElementById('chat-pane');
     const viewerPane = document.getElementById('app-viewer-pane');
     const appFrame = document.getElementById('app-frame');
@@ -601,13 +631,24 @@
             msgContainer.innerHTML += '<span class="cursor-blink"></span>';
         }
 
+        let hasHtmlApp = false;
+
         const blocks = msgContainer.querySelectorAll("pre");
         blocks.forEach(pre => {
             const codeEl = pre.querySelector("code");
             if (codeEl) {
                 const isHtml = codeEl.classList.contains("language-html") || markdownContent.includes("<html") || markdownContent.includes("<!DOCTYPE");
+                const isMermaid = codeEl.classList.contains("language-mermaid");
                 const code = codeEl.textContent;
                 
+                if (isMermaid) {
+                    const mermaidDiv = document.createElement("div");
+                    mermaidDiv.className = "mermaid";
+                    mermaidDiv.textContent = code;
+                    pre.parentNode.replaceChild(mermaidDiv, pre);
+                    return;
+                }
+
                 // Real-time live frame rendering for active streaming
                 if (isStreaming && isHtml && code.length > 50) {
                     if (!chatPane.classList.contains('split')) openAppViewer(code);
@@ -616,6 +657,7 @@
                 
                 // Mount RUN APP and DOWNLOAD buttons
                 if (!isStreaming && isHtml) {
+                    hasHtmlApp = true;
                     if (!pre.querySelector('.run-app-btn')) {
                         const runBtn = document.createElement("button");
                         runBtn.className = "run-app-btn";
@@ -641,19 +683,54 @@
             }
         });
         
+        if (!isStreaming) {
+            try {
+                if (window.mermaid) window.mermaid.init(undefined, msgContainer.querySelectorAll('.mermaid'));
+            } catch (err) {
+                console.error("Mermaid error:", err);
+            }
+            if (hasHtmlApp && window.confetti) {
+                window.confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+        }
+        
         messagesDiv.scrollTo(0, messagesDiv.scrollHeight);
     }
 
     async function sendMessage() {
         const text = messageInput.value.trim();
-        if (!text) return;
+        if (!text && !currentImageBase64) return;
 
         messageInput.value = ''; messageInput.style.height = 'auto';
         messageInput.disabled = true; sendBtn.disabled = true;
 
         const userMsg = createMessageContainer('user');
-        userMsg.textContent = text;
-        sessions[currentSessionId].history.push({ role: 'user', content: text });
+        
+        if (currentImageBase64) {
+            const imgEl = document.createElement('img');
+            imgEl.src = currentImageBase64;
+            imgEl.className = 'image-preview';
+            imgEl.style.display = 'block';
+            imgEl.style.maxWidth = '200px';
+            userMsg.appendChild(imgEl);
+        }
+        
+        const textDiv = document.createElement('div');
+        textDiv.textContent = text;
+        userMsg.appendChild(textDiv);
+        
+        const payloadMsg = { role: 'user', content: text };
+        if (currentImageBase64) {
+             payloadMsg.images = [currentImageBase64.split(',')[1]]; // remove data:image/...;base64,
+        }
+        sessions[currentSessionId].history.push(payloadMsg);
+        
+        if (imagePreview) {
+            imagePreview.style.display = 'none';
+            imagePreview.src = '';
+            fileUpload.value = '';
+            currentImageBase64 = null;
+        }
         
         // Auto-title purely on first message
         if (sessions[currentSessionId].history.length === 1 || sessions[currentSessionId].title === "New Chat") {
