@@ -101,33 +101,42 @@ app.post("/api/chat", async (req, res) => {
   const finalMessages = mode === "diagram" ? [systemForDiagrams, ...messages] : [systemForApps, ...messages];
 
   try {
-    const data = await callOllama("/api/chat", {
-      model,
-      stream: false,
-      options: {
-        temperature: typeof temperature === "number" ? temperature : 0.4,
-      },
-      messages:
-        mode === "diagram"
-          ? [
-              ...finalMessages,
-              {
-                role: "user",
-                content: `Preferred diagram type: ${diagramType || "auto"}. If this type does not fit, choose the closest Mermaid-compatible type.`,
-              },
-            ]
-          : finalMessages,
+    const fetchRes = await fetch(`${ollamaBaseUrl}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        stream: true, // Enabled live streaming
+        options: {
+          temperature: typeof temperature === "number" ? temperature : 0.4,
+        },
+        messages:
+          mode === "diagram"
+            ? [
+                ...finalMessages,
+                {
+                  role: "user",
+                  content: `Preferred diagram type: ${diagramType || "auto"}. If this type does not fit, choose the closest Mermaid-compatible type.`,
+                },
+              ]
+            : finalMessages,
+      })
     });
 
-    const content = data?.message?.content || "";
+    if (!fetchRes.ok) {
+      const errText = await fetchRes.text();
+      return res.status(fetchRes.status).json({ error: `Ollama request failed: ${fetchRes.status}`, details: errText });
+    }
 
-    return res.json({
-      content,
-      model,
-      created_at: data?.created_at,
-      done_reason: data?.done_reason,
-      raw: data,
-    });
+    res.setHeader("Content-Type", "application/x-ndjson");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    for await (const chunk of fetchRes.body) {
+      res.write(chunk);
+    }
+    
+    return res.end();
   } catch (error) {
     return res.status(500).json({
       error: String(error.message || error),
