@@ -46,6 +46,19 @@
             display: none; flex: 1; flex-direction: column; background-color: #ffffff;
             position: relative; border-left: 1px solid var(--border);
         }
+        #app-viewer-pane.active {
+            display: flex;
+        }
+
+        @media (max-width: 768px) {
+            #layout { flex-direction: column; }
+            #chat-pane.split { max-width: 100%; height: 50vh; }
+            #app-viewer-pane { height: 50vh; display: none; }
+            #app-viewer-pane.active { display: flex; }
+            .workspace-header { padding: 0 10px; height: 50px; }
+            #chat-history { padding: 10px; }
+            #chat-input-container { padding: 10px; }
+        }
 
         .workspace-header {
             height: 60px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between;
@@ -224,13 +237,13 @@
 
     function openAppViewer(code) {
         chatPane.classList.add('split');
-        viewerPane.style.display = 'flex';
+        viewerPane.classList.add('active');
         renderToIframe(code);
     }
 
     function closeAppViewer() {
         chatPane.classList.remove('split');
-        viewerPane.style.display = 'none';
+        viewerPane.classList.remove('active');
         appFrame.src = 'about:blank';
     }
 
