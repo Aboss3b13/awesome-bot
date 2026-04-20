@@ -1,44 +1,37 @@
-# Awesome Bot ?
+# Awesome AI Studio ??
 
-A beautiful, local, and blazing-fast chat interface connecting to the gemma3:4b AI model (running entirely on your NVIDIA GPU via Ollama), wrapped in a sleek Express Server frontend with full Markdown, syntax-highlighting, and DOM-purification built right in!
-
-## Why is it Awesome?
-- ?? **Zero Latency & 100% Private:** Runs entirely on-device using your GPU. No cloud APIs, no data telemetry.
-- ?? **Gorgeous UI:** Glassmorphism chat design featuring an auto-expanding input box, bouncing dark-mode dot-typing indicators, responsive message bounds, and smooth scroll.
-- ?? **Syntax Highlight:** Auto-detects programming languages (Python, JS, C++, HTML) the AI emits and renders beautiful Tokyo Night Dark highlighted code boxes inside bubbles.
-- ?? **Markdown Output:** Supports bolding, italics, code snippets, nested quotes, tables, and ordered lists, powered by Marked.js.
-- ?? **XSS Protection:** Integrates DOMPurify natively so you're safe.
+A lightning-fast, local AI-powered IDE running completely on your machine using Ollama! This application features an ultra-modern, dark developer aesthetic, live HTML/JS generation with streaming, fully interactive Mermaid diagrams, Chart.js rendering, multi-chat session management, and image upload capabilities.
 
 ---
 
-## ?? Prerequisites
+## ??? Prerequisites
 
-1. **[Ollama](https://ollama.com/)** running locally to serve the model. You must have pulled the model (ollama pull gemma3:4b).
-2. **[Node.js](https://nodejs.org)** installed on your machine.
-3. *Optional:* **[ngrok](https://ngrok.com/)** if you intend to share the UI over the internet.
+To run this offline bot on your computer, you only need two pieces of software installed:
+1. **[Node.js](https://nodejs.org/)** (For running the speedy local web server)
+2. **[Ollama](https://ollama.com/)** (The AI engine that runs the models offline)
 
----
-
-## ?? One-Click Start (Windows)
-We've made starting the application extremely easy.
-
-1. Double-click the start.bat file in the root directory.
-2. The script will automatically check if Node.js dependencies are missing and 
-pm install them. 
-3. It will launch the node server automatically.
-4. Click or open **http://localhost:8787** to use the application!
-
-*Note: For Unix/Mac users, manually enter the \server\ folder, run \
-pm install\, then \
-pm start\.*
+### One-Time Setup:
+Make sure you have downloaded the AI brain you intend to use. Open a terminal and run:
+ollama pull gemma3:4b
 
 ---
 
-## ?? Public Sharing
-To host this out to the world:
-1. Ensure the start.bat is running your server locally.
-2. In a separate terminal, type:
-   \\\ash
-   ngrok http 8787
-   \\\
-3. Share the \https://xxxx.ngrok-free.app\ URL with anyone!
+## ?? How to Start (One-Click Launch)
+
+I've set it up so you never have to mess with terminal commands.
+
+1. **Download this repository** to your computer.
+2. Simply double-click the **Start-Bot.bat** file.
+
+That's it! ?
+The script will automatically start the backend, wait 3 seconds, securely open your default web browser straight into the Awesome Bot IDE, and even spin up an ngrok public link!
+
+---
+
+## ?? Features
+* **Code Injection:** Tell the bot to generate an app, and it will spawn an interactive split screen with your live, running web app instantly.
+* **Smart Visualizations:** Ask for a flowchart, and it renders an interactive Mermaid.js diagram. Ask for a pie chart, and it renders a fluid Chart.js graph.
+* **Instant Exporter:** Both apps and diagrams come with 1-click download buttons granting you immediate .html, .png, or .svg files.
+* **Voice Dictation:** Speak your prompts via the native microphone UI.
+* **Vision / Document Analyzer:** Upload mockups or screenshots via the attachment pin!
+* **Multi-Chat Management:** Seamless, persistent state management across multiple separate conversations stored locally in your browser.
