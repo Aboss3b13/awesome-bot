@@ -1,110 +1,44 @@
-# Awesome Bot (Phone App + Ollama via ngrok)
+# Awesome Bot ?
 
-This project gives you a phone app that chats with your local Ollama models through a public tunnel (ngrok).
+A beautiful, local, and blazing-fast chat interface connecting to the gemma3:4b AI model (running entirely on your NVIDIA GPU via Ollama), wrapped in a sleek Express Server frontend with full Markdown, syntax-highlighting, and DOM-purification built right in!
 
-- Model options are loaded live from your Ollama instance (`/api/tags`), so all installed models appear automatically.
-- Works with `qwen3.5:9b`, Gemma models, and any other local model.
-- Supports normal chat and diagram mode.
-- Diagram mode renders Mermaid diagrams in-app (mindmap, class diagram, sequence diagram, BPMN-like flows with flowchart, ER, state, gantt, user journey).
+## Why is it Awesome?
+- ?? **Zero Latency & 100% Private:** Runs entirely on-device using your GPU. No cloud APIs, no data telemetry.
+- ?? **Gorgeous UI:** Glassmorphism chat design featuring an auto-expanding input box, bouncing dark-mode dot-typing indicators, responsive message bounds, and smooth scroll.
+- ?? **Syntax Highlight:** Auto-detects programming languages (Python, JS, C++, HTML) the AI emits and renders beautiful Tokyo Night Dark highlighted code boxes inside bubbles.
+- ?? **Markdown Output:** Supports bolding, italics, code snippets, nested quotes, tables, and ordered lists, powered by Marked.js.
+- ?? **XSS Protection:** Integrates DOMPurify natively so you're safe.
 
-## Project Layout
+---
 
-- `server/`: Express API proxy to local Ollama
-- `mobile/`: Expo React Native app (Android/iOS)
+## ?? Prerequisites
 
-## 1) Run Ollama
+1. **[Ollama](https://ollama.com/)** running locally to serve the model. You must have pulled the model (ollama pull gemma3:4b).
+2. **[Node.js](https://nodejs.org)** installed on your machine.
+3. *Optional:* **[ngrok](https://ngrok.com/)** if you intend to share the UI over the internet.
 
-Make sure Ollama is running on your laptop:
+---
 
-```powershell
-ollama serve
-```
+## ?? One-Click Start (Windows)
+We've made starting the application extremely easy.
 
-Ensure your desired models are available:
+1. Double-click the start.bat file in the root directory.
+2. The script will automatically check if Node.js dependencies are missing and 
+pm install them. 
+3. It will launch the node server automatically.
+4. Click or open **http://localhost:8787** to use the application!
 
-```powershell
-ollama list
-```
+*Note: For Unix/Mac users, manually enter the \server\ folder, run \
+pm install\, then \
+pm start\.*
 
-## 2) Run the API Server
+---
 
-```powershell
-cd "c:\School\BBB\Lernatelier\awesome bot\server"
-Copy-Item .env.example .env
-npm install
-npm run start
-```
-
-Default server URL: `http://localhost:8787`
-
-## 3) Expose Server with ngrok
-
-In a new terminal:
-
-```powershell
-ngrok http 8787
-```
-
-Copy the `https://...ngrok-free.app` URL.
-
-## 4) Run Mobile App
-
-```powershell
-cd "c:\School\BBB\Lernatelier\awesome bot\mobile"
-npm install
-npm run start
-```
-
-- Open Expo Go on your phone and scan the QR code.
-- In app, set **Backend URL** to your ngrok URL.
-- Tap **Refresh Models** to load all local Ollama models.
-
-## 5) Build APK (No Account Required)
-
-This repository includes a GitHub Actions workflow that builds an APK on GitHub servers.
-
-How to use it:
-
-1. Push your latest changes to `main` (already done in this repo).
-2. Open GitHub repo -> **Actions** -> **Build Android APK**.
-3. Run workflow (or wait for auto-run on push).
-4. Open the workflow run and download artifact: **awesome-bot-apk**.
-
-Optional easy download:
-
-- The workflow also publishes the APK to Releases under tag `latest-apk`.
-- Release page: `https://github.com/Aboss3b13/awesome-bot/releases`
-
-Direct Actions page:
-
-- `https://github.com/Aboss3b13/awesome-bot/actions`
-
-The APK file produced is:
-
-- `app-debug.apk`
-
-Notes:
-
-- This does not require Expo account login.
-- For release-signed Play Store builds later, we can add keystore signing in CI.
-
-## GitHub Push
-
-Your target repo: `https://github.com/Aboss3b13/awesome-bot`
-
-```powershell
-cd "c:\School\BBB\Lernatelier\awesome bot"
-git init
-git add .
-git commit -m "Initial awesome bot app and ollama proxy"
-git branch -M main
-git remote add origin https://github.com/Aboss3b13/awesome-bot.git
-git push -u origin main
-```
-
-If the remote already has commits, run:
-
-```powershell
-git pull --rebase origin main
-git push -u origin main
-```
+## ?? Public Sharing
+To host this out to the world:
+1. Ensure the start.bat is running your server locally.
+2. In a separate terminal, type:
+   \\\ash
+   ngrok http 8787
+   \\\
+3. Share the \https://xxxx.ngrok-free.app\ URL with anyone!
