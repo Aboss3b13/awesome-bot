@@ -371,7 +371,7 @@
         <div id="messages"></div>
         <div id="input-area">
             <div class="input-container">
-                <div id="doc-preview" style="display: none; width: 100%; border-radius: 8px; background: var(--bg-input); padding: 8px 12px; margin-bottom: 10px; border: 1px solid var(--border); font-size: 13px; font-weight: 500; color: var(--text-main); display: flex; align-items: center; gap: 8px; box-sizing: border-box;">
+                <div id="doc-preview" style="display: none; width: 100%; border-radius: 8px; background: var(--bg-input); padding: 8px 12px; margin-bottom: 10px; border: 1px solid var(--border); font-size: 13px; font-weight: 500; color: var(--text-main); align-items: center; gap: 8px; box-sizing: border-box;">
                     <i class="fa-solid fa-file-alt" style="color: var(--primary);"></i>
                     <span id="doc-filename" style="flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></span>
                     <button onclick="clearAttachedFile()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;"><i class="fa-solid fa-xmark"></i></button>
@@ -414,7 +414,7 @@
     let currentDocumentText = null;
     let currentDocumentName = null;
 
-    function clearAttachedFile() {
+    function clearAttachedFile(clearInput = true) {
         currentImageBase64 = null;
         currentDocumentText = null;
         currentDocumentName = null;
@@ -422,14 +422,14 @@
         if (img) img.style.display = 'none';
         const docPrev = document.getElementById('doc-preview');
         if (docPrev) docPrev.style.display = 'none';
-        if (fileUpload) fileUpload.value = '';
+        if (fileUpload && clearInput) fileUpload.value = '';
         sendBtn.disabled = !messageInput.value;
     }
 
     if (fileUpload) {
         fileUpload.addEventListener('change', async function() {
-            clearAttachedFile();
             const file = this.files[0];
+            clearAttachedFile(false); // Do not clear the file input yet!
             if (!file) return;
 
             // Handle images natively
