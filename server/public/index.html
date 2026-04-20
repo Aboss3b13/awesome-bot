@@ -18,45 +18,47 @@
     
     <style>
         :root {
-            --bg-dark: #13151b;
-            --bg-panel: #1a1d24;
-            --bg-input: #1e222b;
-            --primary: #f2a65a;
-            --primary-hover: #d98e48;
-            --text-main: #d1d5db;
-            --text-muted: #8b949e;
-            --border: #2d3139;
+            --bg-dark: #0f1117;
+            --bg-panel: rgba(20, 23, 29, 0.7);
+            --bg-input: rgba(30, 34, 43, 0.6);
+            --primary: #ff8c42;
+            --primary-hover: #ff7315;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
             --msg-user: #1e222b;
             --msg-bot: transparent;
-            --header-bg: rgba(19, 21, 27, 0.85);
-            --input-area-bg: rgba(19, 21, 27, 0.85);
-            --gradient-stop: #0b0c10;
-            --bot-pre-bg: #090a0c;
+            --header-bg: rgba(15, 17, 23, 0.6);
+            --input-area-bg: transparent;
+            --gradient-stop: transparent;
+            --bot-pre-bg: rgba(0, 0, 0, 0.3);
             --bot-code-bg: rgba(255, 255, 255, 0.05);
-            --sidebar-bg: #0e1015;
+            --sidebar-bg: rgba(14, 16, 21, 0.9);
             --sidebar-hover: rgba(255,255,255,0.06);
-            --sidebar-active: rgba(242, 166, 90, 0.15);
+            --sidebar-active: rgba(255, 140, 66, 0.15);
+            --glass-blur: blur(20px);
         }
 
         :root.light-mode {
-            --bg-dark: #f0f2f5;
-            --bg-panel: #ffffff;
-            --bg-input: #ffffff;
-            --primary: #d97706;
-            --primary-hover: #b05c04;
-            --text-main: #24292f;
-            --text-muted: #57606a;
-            --border: #d0d7de;
+            --bg-dark: #f8fafc;
+            --bg-panel: rgba(255, 255, 255, 0.7);
+            --bg-input: rgba(255, 255, 255, 0.6);
+            --primary: #ea580c;
+            --primary-hover: #c2410c;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: rgba(0, 0, 0, 0.08);
             --msg-user: #e8eaf0;
             --msg-bot: transparent;
-            --header-bg: rgba(240, 242, 245, 0.85);
-            --input-area-bg: rgba(240, 242, 245, 0.85);
-            --gradient-stop: #e5e8e8;
-            --bot-pre-bg: #ffffff;
+            --header-bg: rgba(248, 250, 252, 0.6);
+            --input-area-bg: transparent;
+            --gradient-stop: transparent;
+            --bot-pre-bg: rgba(255, 255, 255, 0.8);
             --bot-code-bg: rgba(0, 0, 0, 0.05);
-            --sidebar-bg: #eaeef2;
+            --sidebar-bg: rgba(241, 245, 249, 0.9);
             --sidebar-hover: rgba(0,0,0,0.05);
-            --sidebar-active: rgba(217, 119, 6, 0.1);
+            --sidebar-active: rgba(234, 88, 12, 0.1);
+            --glass-blur: blur(20px);
         }
 
         * { box-sizing: border-box; }
@@ -66,6 +68,9 @@
             background-color: var(--bg-dark); color: var(--text-main);
             margin: 0; padding: 0; display: flex; height: 100dvh; overflow: hidden;
             -webkit-tap-highlight-color: transparent;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(255, 140, 66, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.04), transparent 25%);
         }
 
         #layout { display: flex; width: 100%; height: 100dvh; }
@@ -176,8 +181,8 @@
         }
 
         .workspace-header {
-            height: 60px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between;
-            background-color: var(--header-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            height: 60px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
+            background-color: var(--header-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
             border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100;
         }
 
@@ -239,7 +244,7 @@
         }
         .message.user { 
             background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; border: none; 
-            border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(242, 166, 90, 0.25); 
+            border-bottom-right-radius: 4px; box-shadow: 0 8px 16px rgba(255, 115, 21, 0.25); 
             line-height: 1.5; font-weight: 400; padding: 12px 18px;
         }
         .message.bot { width: 100%; border: none; padding: 0 16px; font-weight: 300; letter-spacing: 0.2px; overflow-x: hidden; }
@@ -277,11 +282,12 @@
         }
         .input-container {
             display: flex; background-color: var(--bg-input); border: 1px solid var(--border);
-            border-radius: 24px; padding: 8px 16px; align-items: flex-end; flex-wrap: wrap; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3); width: 100%; max-width: 900px; position: relative;
+            border-radius: 28px; padding: 12px 16px; align-items: flex-end; flex-wrap: wrap; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); width: 100%; max-width: 900px; position: relative;
+            backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
         }
         .input-container:focus-within { 
-            border-color: var(--primary); box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2), 0 4px 14px rgba(0, 0, 0, 0.4); 
+            border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.2), 0 8px 32px rgba(0, 0, 0, 0.4); 
             background-color: var(--bg-panel);
         }
         #message-input {
@@ -289,7 +295,7 @@
             font-size: 15px; outline: none; resize: none; max-height: 200px; line-height: 1.5;
         }
         #message-input::placeholder { color: var(--text-muted); }
-        #send-btn {
+        #send-btn, #stop-btn {
             background-color: var(--bg-dark); color: var(--text-muted); border: none;
             width: 36px; height: 36px; border-radius: 50%; margin-bottom: 4px; margin-left: 8px;
             display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -299,7 +305,10 @@
             background-color: var(--primary); color: white; box-shadow: 0 4px 12px rgba(242, 166, 90, 0.4);
             transform: translateY(-1px);
         }
-        #send-btn:not(:disabled):active { transform: translateY(1px); box-shadow: 0 2px 4px rgba(242, 166, 90, 0.4); }
+        #stop-btn {
+            background-color: #d73a4a !important; color: white !important; box-shadow: 0 4px 12px rgba(215, 58, 74, 0.4);
+        }
+        #send-btn:not(:disabled):active, #stop-btn:active { transform: translateY(1px); box-shadow: 0 2px 4px rgba(242, 166, 90, 0.4); }
 
         .mic-btn {
             background: transparent; color: var(--text-muted); border: none;
@@ -382,6 +391,7 @@
                 <img id="image-preview" class="image-preview">
                 <button id="mic-btn" class="mic-btn" title="Talk to AI"><i class="fa-solid fa-microphone"></i></button>
                 <button id="send-btn" disabled><i class="fa-solid fa-arrow-up"></i></button>
+                <button id="stop-btn" style="display: none;" title="Stop Generating"><i class="fa-solid fa-stop"></i></button>
             </div>
         </div>
     </div>
@@ -407,6 +417,16 @@
     const messagesDiv = document.getElementById('messages');
     const messageInput = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
+    const stopBtn = document.getElementById('stop-btn');
+
+    let currentController = null;
+
+    stopBtn.addEventListener('click', () => {
+        if (currentController) {
+            currentController.abort();
+            currentController = null;
+        }
+    });
     
     const fileUpload = document.getElementById('file-upload');
     const imagePreview = document.getElementById('image-preview');
@@ -1153,6 +1173,8 @@
         const botMsg = createMessageContainer('bot');
         parseMarkdownToDOM(botMsg, "", true);
 
+        let botFullContent = "";
+
         try {
             const selectedModel = modelSelect.value;
             if (!selectedModel) {
@@ -1160,10 +1182,15 @@
                 return;
             }
 
+            currentController = new AbortController();
+            sendBtn.style.display = 'none';
+            stopBtn.style.display = 'flex';
+
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ model: selectedModel, messages: chatHistory })
+                body: JSON.stringify({ model: selectedModel, messages: chatHistory }),
+                signal: currentController.signal
             });
 
             if (!res.ok) {
@@ -1174,7 +1201,6 @@
 
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
-            let botFullContent = "";
             let buffer = "";
 
             while (true) {
@@ -1198,7 +1224,26 @@
                     }
                 }
             }
-            
+
+            // Successfully finished generating
+            finalizeMessage();
+
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                botMsg.innerHTML += `\n\n<span style="color:orange;font-style:italic">[Stopped]</span>`;
+                finalizeMessage();
+            } else {
+                botMsg.innerHTML = `<span style="color:red">Failed: ${err.message}</span>`;
+            }
+        } finally {
+            currentController = null;
+            sendBtn.style.display = 'flex';
+            stopBtn.style.display = 'none';
+            messageInput.disabled = false; sendBtn.disabled = !messageInput.value; messageInput.focus();
+            saveSessions();
+        }
+
+        function finalizeMessage() {
             // Re-render completely once done
             parseMarkdownToDOM(botMsg, botFullContent, false);
             chatHistory.push({ role: 'assistant', content: botFullContent });
@@ -1220,12 +1265,6 @@
                     }
                 }
             }
-
-        } catch (err) {
-            botMsg.innerHTML = `<span style="color:red">Failed: ${err.message}</span>`;
-        } finally {
-            messageInput.disabled = false; sendBtn.disabled = false; messageInput.focus();
-            saveSessions();
         }
     }
 

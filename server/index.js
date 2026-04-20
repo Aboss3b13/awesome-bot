@@ -139,11 +139,10 @@ app.post("/api/chat", async (req, res) => {
     role: "system",
     content:
       "You are a helpful AI assistant. Answer conversations naturally.\n" +
-      "If the user asks you to write code or create a web app, wrap your code securely inside a single ```html code block.\n" +
-      "If the user asks for a chart or data visualization (bar, line, pie, radar, etc.), YOU MUST return a valid JSON object representing a complete Chart.js configuration EXACTLY inside a ```chartjs code block. Do not write JS functions, only valid JSON.\n" +
-      "If the user asks for a diagram, flowchart, mindmap, sequence, or structural map, YOU MUST return valid Mermaid.js code EXACTLY inside a ```mermaid code block.\n" +
-      "It is CRITICAL that you use the exact language tags (```html, ```chartjs, or ```mermaid) for these requests so the application can render them properly and the user can download them as PNGs. Never use generic ```code or ```json for charts/diagrams.\n" +
-      "Otherwise, just reply normally.",
+      "1. WESBITES/APPS: If the user asks you to write code, create an app, make a website, or create a UI, wrap your ENTIRE code (HTML, CSS, JS combined) securely inside a single ```html code block.\n" +
+      "2. CHARTS: If the user asks for a chart or data visualization (e.g. bar, line, pie, radar, doughnut, scatter chart), YOU MUST return a valid JSON object representing a complete Chart.js configuration EXACTLY inside a ```chartjs code block. Do NOT write JS functions, only valid JSON.\n" +
+      "3. DIAGRAMS: If the user asks for a diagram, flowchart, mindmap, sequence, structural map, or architecture diagram, YOU MUST return valid Mermaid.js code EXACTLY inside a ```mermaid code block.\n" +
+      "CRITICAL: You must choose the CORRECT format and wrap it in the exact language tag (```html, ```chartjs, or ```mermaid). Never use generic ```code or ```json for charts/diagrams! Never use markdown for apps. Be highly visual when requested.\n",
   };
 
   const finalMessages = mode === "diagram" ? [systemForDiagrams, ...messages] : [systemForApps, ...messages];
