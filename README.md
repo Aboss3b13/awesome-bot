@@ -1,6 +1,6 @@
 # Awesome AI Studio ??
 
-A lightning-fast, local AI-powered IDE running completely on your machine using Ollama! This application features an ultra-modern, dark developer aesthetic, live HTML/JS generation with streaming, fully interactive Mermaid diagrams, Chart.js rendering, multi-chat session management, and image upload capabilities. 
+A lightning-fast, local AI-powered IDE running completely on your machine using Ollama! This application features an ultra-modern, dark developer aesthetic, live HTML/JS generation with streaming, fully interactive Mermaid diagrams, Chart.js rendering, multi-chat session management, and image upload capabilities.  
 ---
 
 ## ??? Prerequisites
